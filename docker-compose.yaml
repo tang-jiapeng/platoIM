@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.9
+    container_name: etcd
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    environment:
+      - ETCD_NAME=s1
+      - ETCD_DATA_DIR=/etcd-data
+      # 允许来自任意 IP 的连接
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      # 同时通告 localhost (给你的 WSL2 Go程序) 和 etcd (给 e3w)
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379,http://localhost:2379
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+      - ETCD_INITIAL_CLUSTER=s1=http://etcd:2380
+      - ETCD_INITIAL_CLUSTER_TOKEN=plato-etcd-token
+      - ETCD_INITIAL_CLUSTER_STATE=new
+    volumes:
+      - etcd_data:/etcd-data
+volumes:
+  etcd_data:
