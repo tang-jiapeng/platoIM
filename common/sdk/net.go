@@ -32,9 +32,14 @@ func newConnect(ip net.IP, port int) *connect {
 			data, err := tcp.ReadData(conn)
 			if err != nil {
 				fmt.Printf("ReadData err:%+v", err)
+				return
 			}
 			msg := &Message{}
-			json.Unmarshal(data, msg)
+			err = json.Unmarshal(data, msg)
+			if err != nil {
+				fmt.Printf("Unmarshal error: %v\n", err)
+				continue
+			}
 			clientConn.recvChan <- msg
 		}
 	}()
