@@ -1,11 +1,11 @@
 package client
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"net"
 	"platoIM/common/sdk"
 	"time"
 
@@ -135,7 +135,7 @@ func viewDownScroll(g *gocui.Gui, cv *gocui.View) error {
 func viewOutput(g *gocui.Gui, x0, y0, x1, y1 int) error {
 	v, err := g.SetView("out", x0, y0, x1, y1)
 	if err != nil {
-		if !errors.Is(err, gocui.ErrUnknownView) {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
 		v.Wrap = true
@@ -148,7 +148,7 @@ func viewOutput(g *gocui.Gui, x0, y0, x1, y1 int) error {
 }
 func viewInput(g *gocui.Gui, x0, y0, x1, y1 int) error {
 	if v, err := g.SetView("main", x0, y0, x1, y1); err != nil {
-		if !errors.Is(err, gocui.ErrUnknownView) {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
 		//当 err == gocui.ErrUnknownView 时运行
@@ -164,7 +164,7 @@ func viewInput(g *gocui.Gui, x0, y0, x1, y1 int) error {
 
 func viewHead(g *gocui.Gui, x0, y0, x1, y1 int) error {
 	if v, err := g.SetView("head", x0, y0, x1, y1); err != nil {
-		if !errors.Is(err, gocui.ErrUnknownView) {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
 		v.Wrap = false
@@ -223,8 +223,8 @@ func pasteDown(g *gocui.Gui, cv *gocui.View) error {
 }
 
 func RunMain() {
-	// step1 创建caht的核心对象
-	chat = sdk.NewChat("127.0.0.1:8080", "logic", "12312321", "2131")
+	// step1 创建chat的核心对象
+	chat = sdk.NewChat(net.ParseIP("0.0.0.0"), 8900, "logic", "12312321", "2131")
 	// step2 创建 GUI 图层对象并进行参与与回调函数的配置
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
