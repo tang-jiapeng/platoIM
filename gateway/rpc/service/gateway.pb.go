@@ -23,7 +23,7 @@ const (
 
 type GatewayRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Fd            int32                  `protobuf:"varint,1,opt,name=fd,proto3" json:"fd,omitempty"`
+	ConnID        uint64                 `protobuf:"varint,1,opt,name=connID,proto3" json:"connID,omitempty"`
 	Data          []byte                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -59,9 +59,9 @@ func (*GatewayRequest) Descriptor() ([]byte, []int) {
 	return file_gateway_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GatewayRequest) GetFd() int32 {
+func (x *GatewayRequest) GetConnID() uint64 {
 	if x != nil {
-		return x.Fd
+		return x.ConnID
 	}
 	return 0
 }
@@ -129,9 +129,9 @@ var File_gateway_proto protoreflect.FileDescriptor
 
 const file_gateway_proto_rawDesc = "" +
 	"\n" +
-	"\rgateway.proto\x12\aservice\"4\n" +
-	"\x0eGatewayRequest\x12\x0e\n" +
-	"\x02fd\x18\x01 \x01(\x05R\x02fd\x12\x12\n" +
+	"\rgateway.proto\x12\aservice\"<\n" +
+	"\x0eGatewayRequest\x12\x16\n" +
+	"\x06connID\x18\x01 \x01(\x04R\x06connID\x12\x12\n" +
 	"\x04data\x18\x02 \x01(\fR\x04data\"7\n" +
 	"\x0fGatewayResponse\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\x05R\x04code\x12\x10\n" +

@@ -11,8 +11,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-var cmdChannel chan *service.CmdContext
-
 // RunMain 启动网关服务
 func RunMain(path string) {
 	config.Init(path)
@@ -41,7 +39,7 @@ func cmdHandler() {
 			fmt.Printf("cancel conn endpoint:%s, fd:%d, data:%+v", cmd.Endpoint, cmd.ConnID, cmd.Payload)
 		case service.SendMsgCmd:
 			fmt.Println("cmdHandler", string(cmd.Payload))
-			client.Push(cmd.Ctx, int32(cmd.ConnID), cmd.Payload)
+			client.Push(cmd.Ctx, cmd.ConnID, cmd.Payload)
 		}
 	}
 }

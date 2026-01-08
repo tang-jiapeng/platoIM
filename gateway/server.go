@@ -83,14 +83,14 @@ func cmdHandler() {
 	}
 }
 func closeConn(cmd *service.CmdContext) {
-	if connPtr, ok := ep.tables.Load(cmd.FD); ok {
+	if connPtr, ok := ep.tables.Load(cmd.ConnID); ok {
 		conn, _ := connPtr.(*connection)
 		conn.Close()
-		ep.tables.Delete(cmd.FD)
+		ep.tables.Delete(cmd.ConnID)
 	}
 }
 func sendMsgByCmd(cmd *service.CmdContext) {
-	if connPtr, ok := ep.tables.Load(cmd.FD); ok {
+	if connPtr, ok := ep.tables.Load(cmd.ConnID); ok {
 		conn, _ := connPtr.(*connection)
 		dp := tcp.DataPgk{
 			Len:  uint32(len(cmd.Payload)),
