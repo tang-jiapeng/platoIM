@@ -24,7 +24,7 @@ const (
 type StateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Endpoint      string                 `protobuf:"bytes,1,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
-	Fd            int32                  `protobuf:"varint,2,opt,name=fd,proto3" json:"fd,omitempty"`
+	ConnID        uint64                 `protobuf:"varint,2,opt,name=connID,proto3" json:"connID,omitempty"`
 	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -67,9 +67,9 @@ func (x *StateRequest) GetEndpoint() string {
 	return ""
 }
 
-func (x *StateRequest) GetFd() int32 {
+func (x *StateRequest) GetConnID() uint64 {
 	if x != nil {
-		return x.Fd
+		return x.ConnID
 	}
 	return 0
 }
@@ -137,10 +137,10 @@ var File_state_proto protoreflect.FileDescriptor
 
 const file_state_proto_rawDesc = "" +
 	"\n" +
-	"\vstate.proto\x12\aservice\"N\n" +
+	"\vstate.proto\x12\aservice\"V\n" +
 	"\fStateRequest\x12\x1a\n" +
-	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x0e\n" +
-	"\x02fd\x18\x02 \x01(\x05R\x02fd\x12\x12\n" +
+	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x16\n" +
+	"\x06connID\x18\x02 \x01(\x04R\x06connID\x12\x12\n" +
 	"\x04data\x18\x03 \x01(\fR\x04data\"5\n" +
 	"\rStateResponse\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\x05R\x04code\x12\x10\n" +

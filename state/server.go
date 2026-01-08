@@ -38,10 +38,10 @@ func cmdHandler() {
 	for cmd := range cmdChannel {
 		switch cmd.Cmd {
 		case service.CancelConnCmd:
-			fmt.Printf("cancel conn endpoint:%s, fd:%d, data:%+v", cmd.Endpoint, cmd.FD, cmd.Playload)
+			fmt.Printf("cancel conn endpoint:%s, fd:%d, data:%+v", cmd.Endpoint, cmd.ConnID, cmd.Payload)
 		case service.SendMsgCmd:
-			fmt.Println("cmdHandler", string(cmd.Playload))
-			client.Push(cmd.Ctx, int32(cmd.FD), cmd.Playload)
+			fmt.Println("cmdHandler", string(cmd.Payload))
+			client.Push(cmd.Ctx, int32(cmd.ConnID), cmd.Payload)
 		}
 	}
 }

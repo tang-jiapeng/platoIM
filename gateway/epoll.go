@@ -63,11 +63,8 @@ func (e *ePool) createAcceptProcess() {
 					}
 					fmt.Errorf("accept err: %v", e)
 				}
-				c := connection{
-					conn: conn,
-					fd:   socketFD(conn),
-				}
-				ep.addTask(&c)
+				c := NewConnection(conn)
+				ep.addTask(c)
 			}
 		}()
 	}
@@ -129,7 +126,8 @@ func (e *ePool) startEProc() {
 
 // epoller 对象 轮询器
 type epoller struct {
-	fd int
+	fd            int
+	fdToConnTable sync.Map
 }
 
 // TODO: 默认水平触发模式,可采用非阻塞FD,优化边沿触发模式
@@ -139,7 +137,9 @@ func (e *epoller) add(conn *connection) error {
 	if err != nil {
 		return err
 	}
-	ep.tables.Store(fd, conn)
+	e.fdToConnTable.Store(conn.fd, conn)
+	ep.tables.Store(conn.id, conn)
+	conn.BindEpoller(e)
 	return nil
 }
 
@@ -151,7 +151,7 @@ func (e *epoller) wait(msec int) ([]*connection, error) {
 	}
 	var connections []*connection
 	for i := 0; i < n; i++ {
-		if conn, ok := ep.tables.Load(int(events[i].Fd)); ok {
+		if conn, ok := e.fdToConnTable.Load(int(events[i].Fd)); ok {
 			connections = append(connections, conn.(*connection))
 		}
 	}
@@ -165,7 +165,8 @@ func (e *epoller) remove(c *connection) error {
 	if err != nil {
 		return err
 	}
-	ep.tables.Delete(fd)
+	ep.tables.Delete(c.id)
+	e.fdToConnTable.Delete(c.fd)
 	return nil
 }
 

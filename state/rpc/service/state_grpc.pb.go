@@ -28,7 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // 网关机的 rpc server定义
-// cd state/rpc 下 执行 protoc -I service --go_out=plugins=grpc:service service/state.proto
+// cd state/rpc 下 执行 protoc -I service --go_out=service --go_opt=paths=source_relative --go-grpc_out=service --go-grpc_opt=paths=source_relative service/state.proto
 type StateClient interface {
 	CancelConn(ctx context.Context, in *StateRequest, opts ...grpc.CallOption) (*StateResponse, error)
 	SendMsg(ctx context.Context, in *StateRequest, opts ...grpc.CallOption) (*StateResponse, error)
@@ -67,7 +67,7 @@ func (c *stateClient) SendMsg(ctx context.Context, in *StateRequest, opts ...grp
 // for forward compatibility.
 //
 // 网关机的 rpc server定义
-// cd state/rpc 下 执行 protoc -I service --go_out=plugins=grpc:service service/state.proto
+// cd state/rpc 下 执行 protoc -I service --go_out=service --go_opt=paths=source_relative --go-grpc_out=service --go-grpc_opt=paths=source_relative service/state.proto
 type StateServer interface {
 	CancelConn(context.Context, *StateRequest) (*StateResponse, error)
 	SendMsg(context.Context, *StateRequest) (*StateResponse, error)
