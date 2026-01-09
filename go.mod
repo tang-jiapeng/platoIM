@@ -7,6 +7,7 @@ toolchain go1.24.9
 require (
 	github.com/bytedance/gopkg v0.1.1
 	github.com/cloudwego/hertz v0.10.3
+	github.com/goccy/go-json v0.10.5
 	github.com/golang/protobuf v1.5.4
 	github.com/gookit/color v1.6.0
 	github.com/juju/ratelimit v1.0.2

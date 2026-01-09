@@ -23,23 +23,23 @@ func initStateClient() {
 	stateClient = service.NewStateClient(cli)
 }
 
-func CancelConn(ctx *context.Context, endpoint string, connID uint64, payLoad []byte) error {
+func CancelConn(ctx *context.Context, endpoint string, connID uint64, Payload []byte) error {
 	rpcCtx, _ := context.WithTimeout(*ctx, 100*time.Millisecond)
 	stateClient.CancelConn(rpcCtx, &service.StateRequest{
 		Endpoint: endpoint,
 		ConnID:   connID,
-		Data:     payLoad,
+		Data:     Payload,
 	})
 	return nil
 }
 
-func SendMsg(ctx *context.Context, endpoint string, connID uint64, payLoad []byte) error {
+func SendMsg(ctx *context.Context, endpoint string, connID uint64, Payload []byte) error {
 	rpcCtx, _ := context.WithTimeout(*ctx, 100*time.Millisecond)
-	fmt.Println("sendMsg", connID, string(payLoad))
+	fmt.Println("sendMsg", connID, string(Payload))
 	_, err := stateClient.SendMsg(rpcCtx, &service.StateRequest{
 		Endpoint: endpoint,
 		ConnID:   connID,
-		Data:     payLoad,
+		Data:     Payload,
 	})
 	if err != nil {
 		panic(err)

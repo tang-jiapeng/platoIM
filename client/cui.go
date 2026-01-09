@@ -64,12 +64,15 @@ func viewPrint(g *gocui.Gui, name, msg string, newline bool) {
 func doRecv(g *gocui.Gui) {
 	recvChannel := chat.Recv()
 	for msg := range recvChannel {
-		switch msg.Type {
-		case sdk.MsgTypeText:
-			viewPrint(g, msg.Name, msg.Content, false)
+		if msg != nil {
+			switch msg.Type {
+			case sdk.MsgTypeText:
+				viewPrint(g, msg.Name, msg.Content, false)
+			case sdk.MsgTypeAck:
+				//TODO 默认不处理
+			}
 		}
 	}
-	g.Close()
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
@@ -92,7 +95,8 @@ func doSay(g *gocui.Gui, cv *gocui.View) {
 				ToUserID:   "222222",
 				Content:    string(p)}
 			// 先把自己说的话显示到消息流中
-			viewPrint(g, "me", msg.Content, false)
+			idKey := fmt.Sprintf("%d", chat.GetCurClientID())
+			viewPrint(g, "me:"+idKey, msg.Content, false)
 			chat.Send(msg)
 		}
 		v.Autoscroll = true
@@ -169,7 +173,7 @@ func viewHead(g *gocui.Gui, x0, y0, x1, y1 int) error {
 		}
 		v.Wrap = false
 		v.Overwrite = true
-		msg := "开始聊天了!"
+		msg := "plato: im系统聊天对话框"
 		setHeadText(g, msg)
 	}
 	return nil
@@ -257,11 +261,15 @@ func RunMain() {
 	if err := g.SetKeybinding("main", gocui.KeyArrowUp, gocui.ModNone, pasteUP); err != nil {
 		log.Panicln(err)
 	}
+	go func() {
+		time.Sleep(10 * time.Second)
+		// 重新连接
+		chat.ReConn()
+	}()
 	// 启动消费函数
 	go doRecv(g)
 	if err := g.MainLoop(); err != nil {
 		log.Println(err)
 	}
-
 	ioutil.WriteFile("chat.log", []byte(buf), 0644)
 }
