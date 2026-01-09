@@ -23,6 +23,8 @@ func RunMain(path string) {
 	client.Init()
 	// 启动时间轮
 	InitTimer()
+	// 启动远程cache状态机组件
+	InitCacheState(ctx)
 	// 启动 命令处理写协程
 	go cmdHandler()
 	// 注册rpc server

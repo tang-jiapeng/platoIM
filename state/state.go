@@ -84,7 +84,9 @@ func (c *connState) close(ctx context.Context) error {
 func (c *connState) reSetHeartTimer() {
 	c.Lock()
 	defer c.Unlock()
-	c.heartTimer.Stop()
+	if c.heartTimer != nil {
+		c.heartTimer.Stop()
+	}
 	c.heartTimer = AfterFunc(5*time.Second, func() {
 		c.reSetReConnTimer()
 	})

@@ -56,13 +56,13 @@ func runProc(c *connection, ep *epoller) {
 		// 如果读取conn时发现连接关闭，则直接端口连接
 		if errors.Is(err, io.EOF) {
 			ep.remove(c)
-			client.CancelConn(&ctx, getEndpoint(), int32(c.fd), nil)
+			client.CancelConn(&ctx, getEndpoint(), c.id, nil)
 		}
 		return
 	}
 	err = wPool.Submit(func() {
 		// step2:交给 state server rpc 处理
-		client.SendMsg(&ctx, getEndpoint(), int32(c.fd), dataBuf)
+		client.SendMsg(&ctx, getEndpoint(), c.id, dataBuf)
 	})
 	if err != nil {
 		fmt.Errorf("runProc:err:%+v\n", err.Error())
