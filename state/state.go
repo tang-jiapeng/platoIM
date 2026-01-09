@@ -3,14 +3,9 @@ package state
 import (
 	"context"
 	"platoIM/common/timingwheel"
-	"platoIM/state/rpc/client"
-	"platoIM/state/rpc/service"
 	"sync"
 	"time"
 )
-
-var cmdChannel chan *service.CmdContext
-var connToStateTable sync.Map
 
 type connState struct {
 	sync.RWMutex
@@ -20,27 +15,6 @@ type connState struct {
 	msgTimerLock string
 	connID       uint64
 	did          uint64
-}
-
-func (c *connState) reSetHeartTimer() {
-	c.Lock()
-	defer c.Unlock()
-	c.heartTimer.Stop()
-	c.heartTimer = AfterFunc(5*time.Second, func() {
-		c.reSetReConnTimer()
-	})
-}
-
-func (c *connState) reSetReConnTimer() {
-	c.Lock()
-	defer c.Unlock()
-	if c.reConnTimer != nil {
-		c.reConnTimer.Stop()
-	}
-	c.reConnTimer = AfterFunc(10*time.Second, func() {
-		ctx := context.TODO()
-		cs.connLogOut(ctx, c.connID)
-	})
 }
 
 func (c *connState) close(ctx context.Context) error {
@@ -62,15 +36,23 @@ func (c *connState) close(ctx context.Context) error {
 	return nil
 }
 
-func clearState(connID uint64) {
-	if data, ok := connToStateTable.Load(connID); ok {
-		state, _ := data.(*connState)
-		state.Lock()
-		defer state.Unlock()
-		state.reConnTimer = AfterFunc(10*time.Second, func() {
-			ctx := context.TODO()
-			client.DelConn(&ctx, connID, nil)
-			connToStateTable.Delete(connID)
-		})
+func (c *connState) reSetHeartTimer() {
+	c.Lock()
+	defer c.Unlock()
+	c.heartTimer.Stop()
+	c.heartTimer = AfterFunc(5*time.Second, func() {
+		c.reSetReConnTimer()
+	})
+}
+
+func (c *connState) reSetReConnTimer() {
+	c.Lock()
+	defer c.Unlock()
+	if c.reConnTimer != nil {
+		c.reConnTimer.Stop()
 	}
+	c.reConnTimer = AfterFunc(10*time.Second, func() {
+		ctx := context.TODO()
+		cs.connLogOut(ctx, c.connID)
+	})
 }

@@ -21,7 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// cd common/idl; protoc -I message  --go_out=plugins=grpc:message  message/message.proto
+// cd common/idl;  protoc -I message --go_out=message --go_opt=paths=source_relative --go-grpc_out=message --go-grpc_opt=paths=source_relative message/message.proto
 type CmdType int32
 
 const (
@@ -29,6 +29,8 @@ const (
 	CmdType_Heartbeat CmdType = 1
 	CmdType_ReConn    CmdType = 2
 	CmdType_ACK       CmdType = 3
+	CmdType_UP        CmdType = 4 // 上行消息
+	CmdType_Push      CmdType = 5 // 下行 推送消息
 )
 
 // Enum value maps for CmdType.
@@ -38,12 +40,16 @@ var (
 		1: "Heartbeat",
 		2: "ReConn",
 		3: "ACK",
+		4: "UP",
+		5: "Push",
 	}
 	CmdType_value = map[string]int32{
 		"Login":     0,
 		"Heartbeat": 1,
 		"ReConn":    2,
 		"ACK":       3,
+		"UP":        4,
+		"Push":      5,
 	}
 )
 
@@ -127,6 +133,172 @@ func (x *MsgCmd) GetPayload() []byte {
 	return nil
 }
 
+// 上行消息 pb结构
+type UPMsg struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Head          *UPMsgHead             `protobuf:"bytes,1,opt,name=Head,proto3" json:"Head,omitempty"`
+	UPMsgBody     []byte                 `protobuf:"bytes,2,opt,name=UPMsgBody,proto3" json:"UPMsgBody,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UPMsg) Reset() {
+	*x = UPMsg{}
+	mi := &file_message_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UPMsg) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UPMsg) ProtoMessage() {}
+
+func (x *UPMsg) ProtoReflect() protoreflect.Message {
+	mi := &file_message_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UPMsg.ProtoReflect.Descriptor instead.
+func (*UPMsg) Descriptor() ([]byte, []int) {
+	return file_message_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UPMsg) GetHead() *UPMsgHead {
+	if x != nil {
+		return x.Head
+	}
+	return nil
+}
+
+func (x *UPMsg) GetUPMsgBody() []byte {
+	if x != nil {
+		return x.UPMsgBody
+	}
+	return nil
+}
+
+// 上行消息头 pb结构
+type UPMsgHead struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientID      uint64                 `protobuf:"varint,1,opt,name=ClientID,proto3" json:"ClientID,omitempty"`
+	ConnID        uint64                 `protobuf:"varint,2,opt,name=ConnID,proto3" json:"ConnID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UPMsgHead) Reset() {
+	*x = UPMsgHead{}
+	mi := &file_message_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UPMsgHead) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UPMsgHead) ProtoMessage() {}
+
+func (x *UPMsgHead) ProtoReflect() protoreflect.Message {
+	mi := &file_message_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UPMsgHead.ProtoReflect.Descriptor instead.
+func (*UPMsgHead) Descriptor() ([]byte, []int) {
+	return file_message_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *UPMsgHead) GetClientID() uint64 {
+	if x != nil {
+		return x.ClientID
+	}
+	return 0
+}
+
+func (x *UPMsgHead) GetConnID() uint64 {
+	if x != nil {
+		return x.ConnID
+	}
+	return 0
+}
+
+type PushMsg struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MsgID         uint64                 `protobuf:"varint,1,opt,name=MsgID,proto3" json:"MsgID,omitempty"`
+	SessionID     uint64                 `protobuf:"varint,2,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
+	Content       []byte                 `protobuf:"bytes,3,opt,name=Content,proto3" json:"Content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PushMsg) Reset() {
+	*x = PushMsg{}
+	mi := &file_message_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PushMsg) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PushMsg) ProtoMessage() {}
+
+func (x *PushMsg) ProtoReflect() protoreflect.Message {
+	mi := &file_message_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PushMsg.ProtoReflect.Descriptor instead.
+func (*PushMsg) Descriptor() ([]byte, []int) {
+	return file_message_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *PushMsg) GetMsgID() uint64 {
+	if x != nil {
+		return x.MsgID
+	}
+	return 0
+}
+
+func (x *PushMsg) GetSessionID() uint64 {
+	if x != nil {
+		return x.SessionID
+	}
+	return 0
+}
+
+func (x *PushMsg) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
 // ACK 消息
 type ACKMsg struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -134,13 +306,16 @@ type ACKMsg struct {
 	Msg           string                 `protobuf:"bytes,2,opt,name=Msg,proto3" json:"Msg,omitempty"`
 	Type          CmdType                `protobuf:"varint,3,opt,name=Type,proto3,enum=message.CmdType" json:"Type,omitempty"`
 	ConnID        uint64                 `protobuf:"varint,4,opt,name=ConnID,proto3" json:"ConnID,omitempty"`
+	ClientID      uint64                 `protobuf:"varint,5,opt,name=ClientID,proto3" json:"ClientID,omitempty"`
+	SessionID     uint64                 `protobuf:"varint,6,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
+	MsgID         uint64                 `protobuf:"varint,7,opt,name=MsgID,proto3" json:"MsgID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ACKMsg) Reset() {
 	*x = ACKMsg{}
-	mi := &file_message_proto_msgTypes[1]
+	mi := &file_message_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -152,7 +327,7 @@ func (x *ACKMsg) String() string {
 func (*ACKMsg) ProtoMessage() {}
 
 func (x *ACKMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_message_proto_msgTypes[1]
+	mi := &file_message_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -165,7 +340,7 @@ func (x *ACKMsg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ACKMsg.ProtoReflect.Descriptor instead.
 func (*ACKMsg) Descriptor() ([]byte, []int) {
-	return file_message_proto_rawDescGZIP(), []int{1}
+	return file_message_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ACKMsg) GetCode() uint32 {
@@ -196,6 +371,27 @@ func (x *ACKMsg) GetConnID() uint64 {
 	return 0
 }
 
+func (x *ACKMsg) GetClientID() uint64 {
+	if x != nil {
+		return x.ClientID
+	}
+	return 0
+}
+
+func (x *ACKMsg) GetSessionID() uint64 {
+	if x != nil {
+		return x.SessionID
+	}
+	return 0
+}
+
+func (x *ACKMsg) GetMsgID() uint64 {
+	if x != nil {
+		return x.MsgID
+	}
+	return 0
+}
+
 // 登陆消息
 type LoginMsgHead struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -206,7 +402,7 @@ type LoginMsgHead struct {
 
 func (x *LoginMsgHead) Reset() {
 	*x = LoginMsgHead{}
-	mi := &file_message_proto_msgTypes[2]
+	mi := &file_message_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -218,7 +414,7 @@ func (x *LoginMsgHead) String() string {
 func (*LoginMsgHead) ProtoMessage() {}
 
 func (x *LoginMsgHead) ProtoReflect() protoreflect.Message {
-	mi := &file_message_proto_msgTypes[2]
+	mi := &file_message_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -231,7 +427,7 @@ func (x *LoginMsgHead) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginMsgHead.ProtoReflect.Descriptor instead.
 func (*LoginMsgHead) Descriptor() ([]byte, []int) {
-	return file_message_proto_rawDescGZIP(), []int{2}
+	return file_message_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *LoginMsgHead) GetDeviceID() uint64 {
@@ -251,7 +447,7 @@ type LoginMsg struct {
 
 func (x *LoginMsg) Reset() {
 	*x = LoginMsg{}
-	mi := &file_message_proto_msgTypes[3]
+	mi := &file_message_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -263,7 +459,7 @@ func (x *LoginMsg) String() string {
 func (*LoginMsg) ProtoMessage() {}
 
 func (x *LoginMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_message_proto_msgTypes[3]
+	mi := &file_message_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -276,7 +472,7 @@ func (x *LoginMsg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginMsg.ProtoReflect.Descriptor instead.
 func (*LoginMsg) Descriptor() ([]byte, []int) {
-	return file_message_proto_rawDescGZIP(), []int{3}
+	return file_message_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LoginMsg) GetHead() *LoginMsgHead {
@@ -302,7 +498,7 @@ type HeartbeatMsgHead struct {
 
 func (x *HeartbeatMsgHead) Reset() {
 	*x = HeartbeatMsgHead{}
-	mi := &file_message_proto_msgTypes[4]
+	mi := &file_message_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -314,7 +510,7 @@ func (x *HeartbeatMsgHead) String() string {
 func (*HeartbeatMsgHead) ProtoMessage() {}
 
 func (x *HeartbeatMsgHead) ProtoReflect() protoreflect.Message {
-	mi := &file_message_proto_msgTypes[4]
+	mi := &file_message_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -327,7 +523,7 @@ func (x *HeartbeatMsgHead) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatMsgHead.ProtoReflect.Descriptor instead.
 func (*HeartbeatMsgHead) Descriptor() ([]byte, []int) {
-	return file_message_proto_rawDescGZIP(), []int{4}
+	return file_message_proto_rawDescGZIP(), []int{7}
 }
 
 type HeartbeatMsg struct {
@@ -340,7 +536,7 @@ type HeartbeatMsg struct {
 
 func (x *HeartbeatMsg) Reset() {
 	*x = HeartbeatMsg{}
-	mi := &file_message_proto_msgTypes[5]
+	mi := &file_message_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -352,7 +548,7 @@ func (x *HeartbeatMsg) String() string {
 func (*HeartbeatMsg) ProtoMessage() {}
 
 func (x *HeartbeatMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_message_proto_msgTypes[5]
+	mi := &file_message_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -365,7 +561,7 @@ func (x *HeartbeatMsg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatMsg.ProtoReflect.Descriptor instead.
 func (*HeartbeatMsg) Descriptor() ([]byte, []int) {
-	return file_message_proto_rawDescGZIP(), []int{5}
+	return file_message_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *HeartbeatMsg) GetHead() *HeartbeatMsgHead {
@@ -392,7 +588,7 @@ type ReConnMsgHead struct {
 
 func (x *ReConnMsgHead) Reset() {
 	*x = ReConnMsgHead{}
-	mi := &file_message_proto_msgTypes[6]
+	mi := &file_message_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -404,7 +600,7 @@ func (x *ReConnMsgHead) String() string {
 func (*ReConnMsgHead) ProtoMessage() {}
 
 func (x *ReConnMsgHead) ProtoReflect() protoreflect.Message {
-	mi := &file_message_proto_msgTypes[6]
+	mi := &file_message_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -417,7 +613,7 @@ func (x *ReConnMsgHead) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReConnMsgHead.ProtoReflect.Descriptor instead.
 func (*ReConnMsgHead) Descriptor() ([]byte, []int) {
-	return file_message_proto_rawDescGZIP(), []int{6}
+	return file_message_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ReConnMsgHead) GetConnID() uint64 {
@@ -437,7 +633,7 @@ type ReConnMsg struct {
 
 func (x *ReConnMsg) Reset() {
 	*x = ReConnMsg{}
-	mi := &file_message_proto_msgTypes[7]
+	mi := &file_message_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -449,7 +645,7 @@ func (x *ReConnMsg) String() string {
 func (*ReConnMsg) ProtoMessage() {}
 
 func (x *ReConnMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_message_proto_msgTypes[7]
+	mi := &file_message_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -462,7 +658,7 @@ func (x *ReConnMsg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReConnMsg.ProtoReflect.Descriptor instead.
 func (*ReConnMsg) Descriptor() ([]byte, []int) {
-	return file_message_proto_rawDescGZIP(), []int{7}
+	return file_message_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ReConnMsg) GetHead() *ReConnMsgHead {
@@ -486,12 +682,25 @@ const file_message_proto_rawDesc = "" +
 	"\rmessage.proto\x12\amessage\"H\n" +
 	"\x06MsgCmd\x12$\n" +
 	"\x04Type\x18\x01 \x01(\x0e2\x10.message.CmdTypeR\x04Type\x12\x18\n" +
-	"\aPayload\x18\x02 \x01(\fR\aPayload\"l\n" +
+	"\aPayload\x18\x02 \x01(\fR\aPayload\"M\n" +
+	"\x05UPMsg\x12&\n" +
+	"\x04Head\x18\x01 \x01(\v2\x12.message.UPMsgHeadR\x04Head\x12\x1c\n" +
+	"\tUPMsgBody\x18\x02 \x01(\fR\tUPMsgBody\"?\n" +
+	"\tUPMsgHead\x12\x1a\n" +
+	"\bClientID\x18\x01 \x01(\x04R\bClientID\x12\x16\n" +
+	"\x06ConnID\x18\x02 \x01(\x04R\x06ConnID\"W\n" +
+	"\aPushMsg\x12\x14\n" +
+	"\x05MsgID\x18\x01 \x01(\x04R\x05MsgID\x12\x1c\n" +
+	"\tSessionID\x18\x02 \x01(\x04R\tSessionID\x12\x18\n" +
+	"\aContent\x18\x03 \x01(\fR\aContent\"\xbc\x01\n" +
 	"\x06ACKMsg\x12\x12\n" +
 	"\x04Code\x18\x01 \x01(\rR\x04Code\x12\x10\n" +
 	"\x03Msg\x18\x02 \x01(\tR\x03Msg\x12$\n" +
 	"\x04Type\x18\x03 \x01(\x0e2\x10.message.CmdTypeR\x04Type\x12\x16\n" +
-	"\x06ConnID\x18\x04 \x01(\x04R\x06ConnID\"*\n" +
+	"\x06ConnID\x18\x04 \x01(\x04R\x06ConnID\x12\x1a\n" +
+	"\bClientID\x18\x05 \x01(\x04R\bClientID\x12\x1c\n" +
+	"\tSessionID\x18\x06 \x01(\x04R\tSessionID\x12\x14\n" +
+	"\x05MsgID\x18\a \x01(\x04R\x05MsgID\"*\n" +
 	"\fLoginMsgHead\x12\x1a\n" +
 	"\bDeviceID\x18\x01 \x01(\x04R\bDeviceID\"Y\n" +
 	"\bLoginMsg\x12)\n" +
@@ -505,13 +714,15 @@ const file_message_proto_rawDesc = "" +
 	"\x06ConnID\x18\x01 \x01(\x04R\x06ConnID\"]\n" +
 	"\tReConnMsg\x12*\n" +
 	"\x04Head\x18\x01 \x01(\v2\x16.message.ReConnMsgHeadR\x04Head\x12$\n" +
-	"\rReConnMsgBody\x18\x02 \x01(\fR\rReConnMsgBody*8\n" +
+	"\rReConnMsgBody\x18\x02 \x01(\fR\rReConnMsgBody*J\n" +
 	"\aCmdType\x12\t\n" +
 	"\x05Login\x10\x00\x12\r\n" +
 	"\tHeartbeat\x10\x01\x12\n" +
 	"\n" +
 	"\x06ReConn\x10\x02\x12\a\n" +
-	"\x03ACK\x10\x03B\fZ\n" +
+	"\x03ACK\x10\x03\x12\x06\n" +
+	"\x02UP\x10\x04\x12\b\n" +
+	"\x04Push\x10\x05B\fZ\n" +
 	"./;messageb\x06proto3"
 
 var (
@@ -527,29 +738,33 @@ func file_message_proto_rawDescGZIP() []byte {
 }
 
 var file_message_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_message_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_message_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_message_proto_goTypes = []any{
 	(CmdType)(0),             // 0: message.CmdType
 	(*MsgCmd)(nil),           // 1: message.MsgCmd
-	(*ACKMsg)(nil),           // 2: message.ACKMsg
-	(*LoginMsgHead)(nil),     // 3: message.LoginMsgHead
-	(*LoginMsg)(nil),         // 4: message.LoginMsg
-	(*HeartbeatMsgHead)(nil), // 5: message.HeartbeatMsgHead
-	(*HeartbeatMsg)(nil),     // 6: message.HeartbeatMsg
-	(*ReConnMsgHead)(nil),    // 7: message.ReConnMsgHead
-	(*ReConnMsg)(nil),        // 8: message.ReConnMsg
+	(*UPMsg)(nil),            // 2: message.UPMsg
+	(*UPMsgHead)(nil),        // 3: message.UPMsgHead
+	(*PushMsg)(nil),          // 4: message.PushMsg
+	(*ACKMsg)(nil),           // 5: message.ACKMsg
+	(*LoginMsgHead)(nil),     // 6: message.LoginMsgHead
+	(*LoginMsg)(nil),         // 7: message.LoginMsg
+	(*HeartbeatMsgHead)(nil), // 8: message.HeartbeatMsgHead
+	(*HeartbeatMsg)(nil),     // 9: message.HeartbeatMsg
+	(*ReConnMsgHead)(nil),    // 10: message.ReConnMsgHead
+	(*ReConnMsg)(nil),        // 11: message.ReConnMsg
 }
 var file_message_proto_depIdxs = []int32{
-	0, // 0: message.MsgCmd.Type:type_name -> message.CmdType
-	0, // 1: message.ACKMsg.Type:type_name -> message.CmdType
-	3, // 2: message.LoginMsg.Head:type_name -> message.LoginMsgHead
-	5, // 3: message.HeartbeatMsg.Head:type_name -> message.HeartbeatMsgHead
-	7, // 4: message.ReConnMsg.Head:type_name -> message.ReConnMsgHead
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	0,  // 0: message.MsgCmd.Type:type_name -> message.CmdType
+	3,  // 1: message.UPMsg.Head:type_name -> message.UPMsgHead
+	0,  // 2: message.ACKMsg.Type:type_name -> message.CmdType
+	6,  // 3: message.LoginMsg.Head:type_name -> message.LoginMsgHead
+	8,  // 4: message.HeartbeatMsg.Head:type_name -> message.HeartbeatMsgHead
+	10, // 5: message.ReConnMsg.Head:type_name -> message.ReConnMsgHead
+	6,  // [6:6] is the sub-list for method output_type
+	6,  // [6:6] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_message_proto_init() }
@@ -563,7 +778,7 @@ func file_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_message_proto_rawDesc), len(file_message_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   8,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -49,22 +49,6 @@ func (cs *cacheState) initLoginSlot(ctx context.Context) error {
 	return nil
 }
 
-func (cs *cacheState) loginSlotUnmarshal(meta string) (uint64, uint64) {
-	strs := strings.Split(meta, ",")
-	if len(strs) < 2 {
-		return 0, 0
-	}
-	did, err := strconv.ParseUint(strs[0], 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	connID, err := strconv.ParseUint(strs[1], 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	return did, connID
-}
-
 func (cs *cacheState) connReLogin(ctx context.Context, did uint64, connID uint64) {
 	//state := cs.newConnState(did, connID)
 	//slotKey := cs.getLoginSlotKey(connID)
@@ -108,4 +92,61 @@ func (cs *cacheState) loadConnIDState(connID uint64) (*connState, bool) {
 		return sate, true
 	}
 	return nil, false
+}
+
+func (cs *cacheState) reConn(ctx context.Context, oldConnID uint64, newConnID uint64) error {
+	var (
+		did uint64
+		err error
+	)
+	if did, err = cs.connLogOut(ctx, oldConnID); err != nil {
+		return err
+	}
+	return cs.connLogin(ctx, did, newConnID) // 重连路由是不用更新的
+}
+
+func (cs *cacheState) connLogin(ctx context.Context, did, connID uint64) error {
+	state := cs.newConnState(did, connID)
+	slotKey := cs.getLoginSlotKey(connID)
+	mate := cs.loginSlotMarshal(did, connID)
+	err := cache.SADD(ctx, slotKey, mate)
+	if err != nil {
+		return err
+	}
+
+	endPoint := fmt.Sprintf("%s:%d", config.GetGatewayServiceAddr(), config.GetStateServerPort())
+	err = router.AddRecord(ctx, did, endPoint, connID)
+	if err != nil {
+		return err
+	}
+
+	//TODO 上行消息 max_client_id 初始化, 现在相当于生命周期在conn维度，后面重构sdk时会调整到会话维度
+
+	// 本地状态存储
+	cs.storeConnIDState(connID, state)
+	return nil
+}
+
+func (cs *cacheState) storeConnIDState(id uint64, state *connState) {
+	cs.connToStateTable.Store(id, state)
+}
+
+func (cs *cacheState) loginSlotMarshal(did, connID uint64) string {
+	return fmt.Sprintf("%d|%d", did, connID)
+}
+
+func (cs *cacheState) loginSlotUnmarshal(meta string) (uint64, uint64) {
+	strs := strings.Split(meta, ",")
+	if len(strs) < 2 {
+		return 0, 0
+	}
+	did, err := strconv.ParseUint(strs[0], 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	connID, err := strconv.ParseUint(strs[1], 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	return did, connID
 }
