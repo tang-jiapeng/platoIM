@@ -2,9 +2,16 @@ package state
 
 import (
 	"context"
+	"fmt"
+	"platoIM/common/cache"
+	"platoIM/common/idl/message"
+	"platoIM/common/router"
 	"platoIM/common/timingwheel"
+	"platoIM/state/rpc/client"
 	"sync"
 	"time"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type connState struct {
@@ -32,7 +39,45 @@ func (c *connState) close(ctx context.Context) error {
 	// TODO 这里如何保证事务性，值得思考一下，或者说有没有必要保证
 	// TODO 这里也可以使用lua或者pipeline 来尽可能合并两次redis的操作 通常在大规模的应用中这是有效的
 	// TODO 这里是要好好思考网络调用次数的时间&空间复杂度的
+	slotKey := cs.getLoginSlotKey(c.connID)
+	mate := cs.loginSlotMarshal(c.did, c.connID)
+	err := cache.SREM(ctx, slotKey, mate)
+	if err != nil {
+		return err
+	}
 
+	slot := cs.getConnStateSlot(c.connID)
+
+	key := fmt.Sprintf(cache.MaxClientIDKey, slot, c.connID, "*")
+	keys, err := cache.GetKeys(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	if len(keys) > 0 {
+		err = cache.Del(ctx, keys...)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = router.DelRecord(ctx, c.did)
+	if err != nil {
+		return err
+	}
+
+	lastMsg := fmt.Sprintf(cache.LastMsgKey, slot, c.connID)
+	err = cache.Del(ctx, lastMsg)
+	if err != nil {
+		return err
+	}
+
+	err = client.DelConn(&ctx, c.connID, nil)
+	if err != nil {
+		return err
+	}
+
+	cs.deleteConnIDState(ctx, c.connID)
 	return nil
 }
 
@@ -55,4 +100,83 @@ func (c *connState) reSetReConnTimer() {
 		ctx := context.TODO()
 		cs.connLogOut(ctx, c.connID)
 	})
+}
+
+func (c *connState) appendMsg(ctx context.Context, key, msgTimerLock string, msgData []byte) {
+	c.Lock()
+	defer c.Unlock()
+	c.msgTimerLock = msgTimerLock
+	if c.msgTimer != nil {
+		c.msgTimer.Stop()
+		c.msgTimer = nil
+	}
+	t := AfterFunc(100*time.Millisecond, func() {
+		rePush(c.connID)
+	})
+	c.msgTimer = t
+	err := cache.SetBytes(ctx, key, msgData, cache.TTL7D)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (c *connState) reSetMsgTimer(connID, sessionID, msgID uint64) {
+	c.Lock()
+	defer c.Unlock()
+	if c.msgTimer != nil {
+		c.msgTimer.Stop()
+	}
+	c.msgTimerLock = fmt.Sprintf("%d_%d", sessionID, msgID)
+	c.msgTimer = AfterFunc(100*time.Millisecond, func() {
+		rePush(connID)
+	})
+}
+
+// 用来重启时恢复
+func (c *connState) loadMsgTimer(ctx context.Context) {
+	data, err := cs.getLastMsg(ctx, c.connID)
+	if err != nil {
+		// 这里的处理是粗暴的，如果线上是需要更sloid的方案
+		panic(err)
+	}
+	if data == nil {
+		return
+	}
+	c.reSetMsgTimer(c.connID, data.SessionID, data.MsgID)
+}
+
+func (c *connState) ackLastMsg(ctx context.Context, sessionID, msgID uint64) bool {
+	c.Lock()
+	defer c.Unlock()
+	msgTimerLock := fmt.Sprintf("%d_%d", sessionID, msgID)
+	if c.msgTimerLock != msgTimerLock {
+		return false
+	}
+	slot := cs.getConnStateSlot(c.connID)
+	key := fmt.Sprintf(cache.LastMsgKey, slot, c.connID)
+	if err := cache.Del(ctx, key); err != nil {
+		return false
+	}
+	if c.msgTimer != nil {
+		c.msgTimer.Stop()
+	}
+	return true
+}
+
+func rePush(connID uint64) {
+	pushMsg, err := cs.getLastMsg(context.Background(), connID)
+	if err != nil {
+		panic(err)
+	}
+	if pushMsg == nil {
+		return
+	}
+	msgData, err := proto.Marshal(pushMsg)
+	if err != nil {
+		panic(err)
+	}
+	sendMsg(connID, message.CmdType_Push, msgData)
+	if state, ok := cs.loadConnIDState(connID); ok {
+		state.reSetMsgTimer(connID, pushMsg.SessionID, pushMsg.MsgID)
+	}
 }

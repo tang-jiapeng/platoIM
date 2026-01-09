@@ -191,6 +191,7 @@ type UPMsgHead struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ClientID      uint64                 `protobuf:"varint,1,opt,name=ClientID,proto3" json:"ClientID,omitempty"`
 	ConnID        uint64                 `protobuf:"varint,2,opt,name=ConnID,proto3" json:"ConnID,omitempty"`
+	SessionId     string                 `protobuf:"bytes,3,opt,name=SessionId,proto3" json:"SessionId,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -237,6 +238,13 @@ func (x *UPMsgHead) GetConnID() uint64 {
 		return x.ConnID
 	}
 	return 0
+}
+
+func (x *UPMsgHead) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
 }
 
 type PushMsg struct {
@@ -685,10 +693,11 @@ const file_message_proto_rawDesc = "" +
 	"\aPayload\x18\x02 \x01(\fR\aPayload\"M\n" +
 	"\x05UPMsg\x12&\n" +
 	"\x04Head\x18\x01 \x01(\v2\x12.message.UPMsgHeadR\x04Head\x12\x1c\n" +
-	"\tUPMsgBody\x18\x02 \x01(\fR\tUPMsgBody\"?\n" +
+	"\tUPMsgBody\x18\x02 \x01(\fR\tUPMsgBody\"]\n" +
 	"\tUPMsgHead\x12\x1a\n" +
 	"\bClientID\x18\x01 \x01(\x04R\bClientID\x12\x16\n" +
-	"\x06ConnID\x18\x02 \x01(\x04R\x06ConnID\"W\n" +
+	"\x06ConnID\x18\x02 \x01(\x04R\x06ConnID\x12\x1c\n" +
+	"\tSessionId\x18\x03 \x01(\tR\tSessionId\"W\n" +
 	"\aPushMsg\x12\x14\n" +
 	"\x05MsgID\x18\x01 \x01(\x04R\x05MsgID\x12\x1c\n" +
 	"\tSessionID\x18\x02 \x01(\x04R\tSessionID\x12\x18\n" +

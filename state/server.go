@@ -65,6 +65,10 @@ func msgCmdHandler(cmdCtx *service.CmdContext, msgCmd *message.MsgCmd) {
 		heartbeatMsgHandler(cmdCtx, msgCmd)
 	case message.CmdType_ReConn:
 		reConnMsgHandler(cmdCtx, msgCmd)
+	case message.CmdType_UP:
+		upMsgHandler(cmdCtx, msgCmd)
+	case message.CmdType_ACK:
+		ackMsgHandler(cmdCtx, msgCmd)
 	}
 }
 
@@ -110,6 +114,50 @@ func reConnMsgHandler(cmdCtx *service.CmdContext, msgCmd *message.MsgCmd) {
 		panic(err)
 	}
 	sendACKMsg(message.CmdType_ReConn, cmdCtx.ConnID, 0, code, msg)
+}
+
+func upMsgHandler(cmdCtx *service.CmdContext, msgCmd *message.MsgCmd) {
+	upMsg := &message.UPMsg{}
+	err := proto.Unmarshal(msgCmd.Payload, upMsg)
+	if err != nil {
+		fmt.Printf("upMsgHandler:err=%s\n", err.Error())
+		return
+	}
+	if cs.compareAndIncrClientID(*cmdCtx.Ctx, cmdCtx.ConnID, upMsg.Head.ClientID, upMsg.Head.SessionId) {
+		// 调用下游业务层rpc，只有当rpc回复成功后才能更新max_clientID
+		sendACKMsg(message.CmdType_UP, cmdCtx.ConnID, upMsg.Head.ClientID, 0, "up ok")
+		// TODO 这里应该调用业务层的代码
+		pushMsg(*cmdCtx.Ctx, cmdCtx.ConnID, cs.msgID, 0, upMsg.UPMsgBody)
+	}
+}
+
+// 由业务层调用，下行消息处理
+func pushMsg(ctx context.Context, connID, sessionID, msgID uint64, data []byte) {
+	// TODO 先在这里push消息
+	pushMsg := &message.PushMsg{
+		MsgID:   cs.msgID,
+		Content: data,
+	}
+	if data, err := proto.Marshal(pushMsg); err != nil {
+		fmt.Printf("Marshal:err=%s\n", err.Error())
+	} else {
+		//TODO 这里就要涉及到 下行消息的下发了,不管成功与否，都要更新last msg
+		sendMsg(connID, message.CmdType_Push, data)
+		err = cs.appendLastMsg(ctx, connID, pushMsg)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func ackMsgHandler(cmdCtx *service.CmdContext, msgCmd *message.MsgCmd) {
+	ackMsg := &message.ACKMsg{}
+	err := proto.Unmarshal(msgCmd.Payload, ackMsg)
+	if err != nil {
+		fmt.Printf("ackMsgHandler:err=%s\n", err.Error())
+		return
+	}
+	cs.ackLastMsg(*cmdCtx.Ctx, ackMsg.ConnID, ackMsg.SessionID, ackMsg.MsgID)
 }
 
 // 发送ack msg
