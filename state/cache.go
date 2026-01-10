@@ -18,6 +18,7 @@ import (
 
 var cs *cacheState
 
+// 远程 cache 状态
 type cacheState struct {
 	msgID            uint64 // test
 	connToStateTable sync.Map
@@ -35,11 +36,14 @@ func InitCacheState(ctx context.Context) {
 	}
 }
 
+// 初始化连接登陆槽
 func (cs *cacheState) initLoginSlot(ctx context.Context) error {
 	loginSlotRange := config.GetStateServerLoginSlotRange()
 	for _, slot := range loginSlotRange {
 		loginSlotKey := fmt.Sprintf(cache.LoginSlotSetKey, slot)
+		// 异步并行处理
 		go func() {
+			// 这里可以使用lua脚本进行批处理
 			loginSlot, err := cache.SmembersStrSlice(ctx, loginSlotKey)
 			if err != nil {
 				panic(err)
@@ -54,20 +58,23 @@ func (cs *cacheState) initLoginSlot(ctx context.Context) error {
 }
 
 func (cs *cacheState) connReLogin(ctx context.Context, did uint64, connID uint64) {
-	state := cs.newConnState(did, connID)
-	cs.storeConnIDState(connID, state)
-	state.loadMsgTimer(ctx)
+	state := cs.newConnState(did, connID) // 创建新的连接状态
+	cs.storeConnIDState(connID, state)    // 存储连接状态
+	state.loadMsgTimer(ctx)               // 加载消息定时器
 }
 
 func (cs *cacheState) newConnState(did, connID uint64) *connState {
+	// 创建链接状态对象
 	state := &connState{
 		connID: connID,
 		did:    did,
 	}
+	// 启动心跳定时器
 	state.reSetHeartTimer()
 	return state
 }
 
+// 获取登陆槽位的key
 func (cs *cacheState) getLoginSlotKey(connID uint64) string {
 	connStateSlotList := config.GetStateServerLoginSlotRange()
 	slotSize := uint64(len(connStateSlotList))
@@ -77,11 +84,11 @@ func (cs *cacheState) getLoginSlotKey(connID uint64) string {
 }
 
 func (cs *cacheState) connLogOut(ctx context.Context, connID uint64) (uint64, error) {
-	if state, ok := cs.loadConnIDState(connID); ok {
-		did := state.did
-		return did, state.close(ctx)
+	if state, ok := cs.loadConnIDState(connID); ok { // 加载连接状态
+		did := state.did             // 获取设备 ID
+		return did, state.close(ctx) // 关闭连接并返回设备 ID 和错误
 	}
-	return 0, nil
+	return 0, nil // 如果连接状态不存在，返回 0 和空错误
 }
 
 func (cs *cacheState) reSetHeartTimer(connID uint64) {
@@ -110,16 +117,18 @@ func (cs *cacheState) reConn(ctx context.Context, oldConnID uint64, newConnID ui
 }
 
 func (cs *cacheState) connLogin(ctx context.Context, did, connID uint64) error {
-	state := cs.newConnState(did, connID)
-	slotKey := cs.getLoginSlotKey(connID)
-	mate := cs.loginSlotMarshal(did, connID)
-	err := cache.SADD(ctx, slotKey, mate)
+	state := cs.newConnState(did, connID) // 创建新的连接状态
+	// 登陆槽存储
+	slotKey := cs.getLoginSlotKey(connID)    // 获取登录槽位的 key
+	mate := cs.loginSlotMarshal(did, connID) // 序列化登录信息
+	err := cache.SADD(ctx, slotKey, mate)    // 将登录信息添加到缓存
 	if err != nil {
 		return err
 	}
 
-	endPoint := fmt.Sprintf("%s:%d", config.GetGatewayServiceAddr(), config.GetStateServerPort())
-	err = router.AddRecord(ctx, did, endPoint, connID)
+	// 添加路由记录
+	endPoint := fmt.Sprintf("%s:%d", config.GetGatewayServiceAddr(), config.GetStateServerPort()) // 构建端点地址
+	err = router.AddRecord(ctx, did, endPoint, connID)                                            // 添加路由记录
 	if err != nil {
 		return err
 	}
@@ -127,7 +136,7 @@ func (cs *cacheState) connLogin(ctx context.Context, did, connID uint64) error {
 	//TODO 上行消息 max_client_id 初始化, 现在相当于生命周期在conn维度，后面重构sdk时会调整到会话维度
 
 	// 本地状态存储
-	cs.storeConnIDState(connID, state)
+	cs.storeConnIDState(connID, state) // 存储连接状态
 	return nil
 }
 

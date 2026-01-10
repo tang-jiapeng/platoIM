@@ -98,8 +98,10 @@ func (c *connState) reSetReConnTimer() {
 	if c.reConnTimer != nil {
 		c.reConnTimer.Stop()
 	}
+	// 初始化重连定时器
 	c.reConnTimer = AfterFunc(10*time.Second, func() {
 		ctx := context.TODO()
+		// 整体connID状态登出
 		cs.connLogOut(ctx, c.connID)
 	})
 }
@@ -112,6 +114,7 @@ func (c *connState) appendMsg(ctx context.Context, key, msgTimerLock string, msg
 		c.msgTimer.Stop()
 		c.msgTimer = nil
 	}
+	// 创建定时器
 	t := AfterFunc(100*time.Millisecond, func() {
 		rePush(c.connID)
 	})
@@ -136,6 +139,7 @@ func (c *connState) reSetMsgTimer(connID, sessionID, msgID uint64) {
 
 // 用来重启时恢复
 func (c *connState) loadMsgTimer(ctx context.Context) {
+	// 创建定时器
 	data, err := cs.getLastMsg(ctx, c.connID)
 	if err != nil {
 		// 这里的处理是粗暴的，如果线上是需要更sloid的方案
