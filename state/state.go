@@ -40,8 +40,8 @@ func (c *connState) close(ctx context.Context) error {
 	// TODO 这里也可以使用lua或者pipeline 来尽可能合并两次redis的操作 通常在大规模的应用中这是有效的
 	// TODO 这里是要好好思考网络调用次数的时间&空间复杂度的
 	slotKey := cs.getLoginSlotKey(c.connID)
-	mate := cs.loginSlotMarshal(c.did, c.connID)
-	err := cache.SREM(ctx, slotKey, mate)
+	meta := cs.loginSlotMarshal(c.did, c.connID)
+	err := cache.SREM(ctx, slotKey, meta)
 	if err != nil {
 		return err
 	}

@@ -120,8 +120,8 @@ func (cs *cacheState) connLogin(ctx context.Context, did, connID uint64) error {
 	state := cs.newConnState(did, connID) // 创建新的连接状态
 	// 登陆槽存储
 	slotKey := cs.getLoginSlotKey(connID)    // 获取登录槽位的 key
-	mate := cs.loginSlotMarshal(did, connID) // 序列化登录信息
-	err := cache.SADD(ctx, slotKey, mate)    // 将登录信息添加到缓存
+	meta := cs.loginSlotMarshal(did, connID) // 序列化登录信息
+	err := cache.SADD(ctx, slotKey, meta)    // 将登录信息添加到缓存
 	if err != nil {
 		return err
 	}
